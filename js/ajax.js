@@ -203,7 +203,8 @@ function uploadFiles(taskId) {
         processData: false,
         success: function (data) {
             if (data.message) {
-                $('#exampleModalToggle' + taskId).modal('hide'); // Close the modal
+                $('#exampleModalToggle' + taskId).modal('hide');
+                $('.modal-backdrop').modal('hide');
                 updateAttachmentCount(taskId);
                 initializeAttachmentCount()
             } else {
