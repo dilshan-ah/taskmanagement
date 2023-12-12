@@ -66,11 +66,11 @@ $(document).ready(function () {
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body">
-                                            <form id="uploadForm" enctype="multipart/form-data">
+                                            <form id="uploadForm${item.id}" enctype="multipart/form-data">
                                                 <input type="hidden" id="task_id" name="task_id" value="${item.id}"/>
                                                 <div class="d-flex gap-3">
                                                     <input class="form-control" type="file" id="files" name="files[]" multiple accept=".pdf, .doc, .docx">
-                                                    <button type="button" id="uploadButton" class="btn btn-primary">Save</button>
+                                                    <button type="button" data-taskid="${item.id}" class="btn btn-primary uploadButton">Save</button>
                                                 </div>
                                             </form>
                                         </div>
@@ -78,7 +78,7 @@ $(document).ready(function () {
                                     </div>
                                 </div>
                                 
-                                <span>15</span>
+                                <span id="attachCount${item.id}"></span>
                             </div>
 
                             <div class="fw-bold d-flex footer-box justify-content-center align-items-center rounded-1 px-2 py-1">
@@ -139,29 +139,73 @@ $(document).ready(function () {
             console.error('Error fetching data:', error);
         }
     });
+    initializeAttachmentCount();
 
-    $(document).on('click', '#uploadButton', function() {
-        uploadFiles();
-    });
+    $(document).on('click', '.uploadButton', function () {
+        // Get task ID from the data attribute
+        const taskId = $(this).data('taskid');
+        uploadFiles(taskId);
+        updateAttachmentCount(taskId);
+
+        initializeAttachmentCount();
+      });
+
+
+      function initializeAttachmentCount() {
+        $.ajax({
+            url: 'http://127.0.0.1:8000/api/attachment-fetch',
+            method: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                if (Array.isArray(data)) {
+                    const attachmentCounts = {};
+
+                    data.forEach(item => {
+                        const fileNamesArray = JSON.parse(item.file_name);
+                        const fileCount = fileNamesArray ? fileNamesArray.length : 0;
+
+                        if (attachmentCounts.hasOwnProperty(item.task_id)) {
+                            attachmentCounts[item.task_id] += fileCount;
+                        } else {
+                            attachmentCounts[item.task_id] = fileCount;
+                        }
+
+                        // Update the attachCount immediately for each task_id
+                        $(`#attachCount${item.task_id}`).text(attachmentCounts[item.task_id]);
+                    });
+                }
+            },
+            error: function (error) {
+                console.error('Error:', error.responseText);
+            }
+        });
+    }
+
+
+
     
 });
 
-function uploadFiles() {
-    const formData = new FormData(document.getElementById('uploadForm'));
+
+
+
+
+
+function uploadFiles(taskId) {
+    const formData = new FormData(document.getElementById(`uploadForm${taskId}`));
 
     $.ajax({
         url: 'http://127.0.0.1:8000/api/attachment',
         method: 'POST',
-        dataType: 'json',
-        processData: false,
-        contentType: false,
         data: formData,
+        dataType: 'json',
+        contentType: false,
+        processData: false,
         success: function (data) {
-            console.log(data);
-
-            // Check if the file name is present in the response
-            if (data.file_name && data.file_extension) {
-                alert('File uploaded successfully: ' + data.file_name + '.' + data.file_extension);
+            if (data.message) {
+                $('#exampleModalToggle' + taskId).modal('hide'); // Close the modal
+                updateAttachmentCount(taskId);
+                initializeAttachmentCount()
             } else {
                 alert('Error uploading file');
             }
