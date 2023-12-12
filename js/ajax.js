@@ -3,7 +3,7 @@
 $(document).ready(function () {
 
     $.ajax({
-        url: 'http://127.0.0.1:8000/api/todos',
+        url: 'https://todo.ifnix.net/public/api/todos',
         method: 'GET',
         dataType: 'json',
         success: function(data) {
@@ -153,7 +153,7 @@ $(document).ready(function () {
 
       function initializeAttachmentCount() {
         $.ajax({
-            url: 'http://127.0.0.1:8000/api/attachment-fetch',
+            url: 'https://todo.ifnix.net/public/api/attachment-fetch',
             method: 'GET',
             dataType: 'json',
             success: function (data) {
@@ -195,7 +195,7 @@ function uploadFiles(taskId) {
     const formData = new FormData(document.getElementById(`uploadForm${taskId}`));
 
     $.ajax({
-        url: 'http://127.0.0.1:8000/api/attachment',
+        url: 'https://todo.ifnix.net/public/api/attachment',
         method: 'POST',
         data: formData,
         dataType: 'json',
